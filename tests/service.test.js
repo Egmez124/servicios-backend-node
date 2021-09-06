@@ -1,5 +1,6 @@
 import db from "../services/db.services.js";
 import faker from "faker";
+import { updateUser } from "../controllers/users.controllers.js";
 
 describe("Servicio findAll de DB", () => {
     beforeAll(async () => {
@@ -106,14 +107,24 @@ describe("Servicio update", () => {
     });
 
     it("Debería de regresar un objeto de tipo User al actualizar", async () => {
-        
+        const {id} = newUser;
+        await db.update(newUser, id);
+        const user = await db.findById(id);
+        expect(Object.keys(user)).toEqual(expect.arrayContaining(["id", "firstname", "lastname", "email"]))
     });
 
     it("Debería de regresar un objeto de tipo User con los valores que se acaban de actualizar", async () => {
-        
+        await db.update(newUser, newUser.id);
+        const user = await db.findById(newUser.id);
+        expect(Object.values(user)).toEqual(expect.arrayContaining(Object.values(newUser)));
     });
 
-    it("Debería de arrojar un error al tratar de actualizar un usuario que no existe en la DB", () => {
+    it("Debería de arrojar un error al tratar de actualizar un usuario que no existe en la DB", async() => {
+        const fakeId = 20
+        const userUpdated = {...newUser};
+        userUpdated.firstname = "Andres";
+        const updated = db.update(userUpdated, fakeId);
+        await expect(updated).rejects.toThrow();
 
     });
 });
@@ -137,10 +148,13 @@ describe("Servicio delete", () => {
     });
 
     it("Debería de regresar true al eliminar un usuario", async () => {
-        
+        const response = await db.delete(newUser.id);
+        expect(response).toBe(true);
     });
 
     it("Debería de regresar false al tratar de eliminar un usuario con un id que no existe en la DB", async () => {
-        
+        const fakeId = 20;
+        const response = await db.delete(fakeId);
+        expect(response).toBe(false);
     });
 });
